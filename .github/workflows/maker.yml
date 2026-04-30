@@ -1,0 +1,29 @@
+name: Motore Grafico Immobiliare Giancani
+
+on:
+  repository_dispatch:
+    types: [crea_immobile]
+
+jobs:
+  elabora_immobile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Installa librerie grafiche e API
+        run: pip install Pillow requests
+
+      - name: Lancia lo script di elaborazione
+        env:
+          AZIONE: ${{ github.event.client_payload.azione }}
+          TIPO: ${{ github.event.client_payload.tipo }}
+          LUOGO: ${{ github.event.client_payload.luogo }}
+          FOTO_URL: ${{ github.event.client_payload.foto_url }}
+          FB_TOKEN: ${{ secrets.FB_TOKEN }} # Salva il tuo token Facebook nei Secrets di GitHub
+        run: python editor_immagini.py
