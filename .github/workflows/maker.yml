@@ -1,8 +1,42 @@
-name: Motore Grafico Immobiliare Giancani
+name: Motore Grafico Post & Storie Immobiliare Giancani
 
 on:
   repository_dispatch:
     types: [crea_immobile]
+  workflow_dispatch:
+    inputs:
+      azione:
+        description: "Azione (es. IN VENDITA, VENDUTO)"
+        required: false
+        default: "IN VENDITA"
+      tipo:
+        description: "Tipologia immobile"
+        required: false
+        default: "Appartamento Luminoso"
+      luogo:
+        description: "Luogo / Indirizzo"
+        required: false
+        default: "Favara (AG)"
+      foto_url:
+        description: "URL Foto Immobile"
+        required: false
+        default: ""
+      prezzo:
+        description: "Prezzo Immobile"
+        required: false
+        default: "€ 120.000"
+      mq:
+        description: "Superficie in metri quadri"
+        required: false
+        default: "120 metri quadri"
+      descrizione:
+        description: "Descrizione immobile (Colonna F)"
+        required: false
+        default: "Splendida soluzione abitativa curata nei minimi dettagli."
+      stile:
+        description: "Stile grafico (cb_curved_wave, metroquadro_gradient, professionecasa_sidebar)"
+        required: false
+        default: "cb_curved_wave"
 
 jobs:
   elabora_immobile:
@@ -16,14 +50,25 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Installa font di sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-dejavu-core fonts-liberation
+
       - name: Installa librerie grafiche e API
         run: pip install Pillow requests
 
       - name: Lancia lo script di elaborazione
         env:
-          AZIONE: ${{ github.event.client_payload.azione }}
-          TIPO: ${{ github.event.client_payload.tipo }}
-          LUOGO: ${{ github.event.client_payload.luogo }}
-          FOTO_URL: ${{ github.event.client_payload.foto_url }}
-          FB_TOKEN: ${{ secrets.FB_TOKEN }} # Salva il tuo token Facebook nei Secrets di GitHub
+          AZIONE: ${{ github.event.client_payload.azione || github.event.inputs.azione || 'IN VENDITA' }}
+          TIPO: ${{ github.event.client_payload.tipo || github.event.inputs.tipo || 'Appartamento di Pregio' }}
+          LUOGO: ${{ github.event.client_payload.luogo || github.event.inputs.luogo || 'Favara (AG)' }}
+          FOTO_URL: ${{ github.event.client_payload.foto_url || github.event.inputs.foto_url || '' }}
+          PREZZO: ${{ github.event.client_payload.prezzo || github.event.inputs.prezzo || 'Trattativa Riservata' }}
+          MQ: ${{ github.event.client_payload.mq || github.event.inputs.mq || '120 metri quadri' }}
+          DESCRIZIONE: ${{ github.event.client_payload.descrizione || github.event.inputs.descrizione || 'Splendida soluzione abitativa luminosa.' }}
+          STILE: ${{ github.event.client_payload.stile || github.event.inputs.stile || 'cb_curved_wave' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FB_TOKEN: ${{ secrets.FB_TOKEN }}
         run: python editor_immagini.py
